@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ola Panel">
+<meta name="theme-color" content="#2E3A8C">
+<link rel="apple-touch-icon" href="icono.png">
+<title>Ola · Panel de uso</title>
+<style>
+  :root {
+    color-scheme: light;
+    --fondo: #F6F1E8; --papel: #FFFDF9; --linea: #E6DFD2; --tinta: #1F2340; --suave: #5E6480; --tenue: #8A8FA8;
+    --marca: #2E3A8C; --sobre: #FFFFFF;
+    --profe: #257de0; --est: #f47230;                    /* series: Nicolás / estudiantes */
+    --s0: #EEF0F4; --s1: #cce3fd; --s2: #84b9f3; --s3: #338ced; --s4: #1757ac; --s5: #0e3d7e;  /* un solo tono, claro→oscuro */
+    --barra: #257de0; --sombra: 0 10px 28px rgba(31,35,64,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --fondo: #12131C; --papel: #1B1D2A; --linea: #2E3144; --tinta: #EEF0F7; --suave: #A9AEC6; --tenue: #7F84A0;
+      --marca: #8FA0FF; --sobre: #12131C;
+      --profe: #338ced; --est: #e76624;
+      --s0: #252838; --s1: #0e3d7e; --s2: #1757ac; --s3: #338ced; --s4: #84b9f3; --s5: #cce3fd;
+      --barra: #338ced; --sombra: 0 10px 28px rgba(0,0,0,.45);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--fondo); color: var(--tinta); font: 15px/1.45 ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  button, input, select { font: inherit; color: inherit; }
+  .marco { max-width: 1180px; margin: 0 auto; padding: calc(22px + env(safe-area-inset-top)) 18px calc(60px + env(safe-area-inset-bottom)); }
+  h1 { font-size: 26px; line-height: 1.15; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+  h2 { font-size: 16px; margin: 0; }
+  .mini { font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--marca); font-weight: 800; }
+  .nota { color: var(--suave); font-size: 13px; margin: 2px 0 0; }
+  .cab { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cab .sitio { flex: 1; min-width: 240px; }
+  .boton { border: 1.5px solid var(--linea); background: var(--papel); border-radius: 999px; padding: 8px 14px; cursor: pointer; font-weight: 700; font-size: 13.5px; }
+  .boton:hover { border-color: var(--marca); }
+  .boton.lleno { background: var(--marca); border-color: var(--marca); color: var(--sobre); }
+  :focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
+
+  /* filtros: una sola fila encima de todo */
+  .filtros { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .seg { display: inline-flex; background: var(--papel); border: 1.5px solid var(--linea); border-radius: 999px; padding: 3px; }
+  .seg button { border: 0; background: none; padding: 6px 13px; border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 13.5px; color: var(--suave); }
+  .seg button[aria-pressed="true"] { background: var(--marca); color: var(--sobre); }
+  .chip { display: none; align-items: center; gap: 8px; background: var(--papel); border: 1.5px solid var(--marca); border-radius: 999px; padding: 6px 8px 6px 14px; font-weight: 700; font-size: 13.5px; }
+  .chip.on { display: inline-flex; }
+  .chip button { border: 0; background: var(--marca); color: var(--sobre); width: 22px; height: 22px; border-radius: 50%; cursor: pointer; line-height: 1; }
+
+  .pestanas { display: flex; gap: 4px; border-bottom: 1.5px solid var(--linea); margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+  .pestanas::-webkit-scrollbar { display: none; }
+  .pestanas button { border: 0; background: none; padding: 10px 16px 11px; cursor: pointer; font-weight: 800; font-size: 14.5px; color: var(--suave); border-bottom: 3px solid transparent; margin-bottom: -1.5px; white-space: nowrap; border-radius: 10px 10px 0 0; }
+  .pestanas button:hover { color: var(--tinta); }
+  .pestanas button[aria-selected="true"] { color: var(--marca); border-bottom-color: var(--marca); }
+  .tarjeta { background: var(--papel); border: 1px solid var(--linea); border-radius: 20px; padding: 18px; box-shadow: var(--sombra); min-width: 0; }
+  .fichas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+  .ficha .n { font-size: 34px; font-weight: 800; line-height: 1.05; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .ficha .t { color: var(--suave); font-size: 13px; font-weight: 700; }
+  .ficha .d { color: var(--tenue); font-size: 12.5px; margin-top: 2px; }
+  .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .uno { margin-bottom: 12px; }
+  .tit { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tit .nota { flex: 1; min-width: 160px; }
+  .ley { display: flex; gap: 14px; font-size: 12.5px; color: var(--suave); font-weight: 700; }
+  .ley i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  /* columnas por día */
+  .dias { position: relative; height: 210px; margin-left: 34px; }
+  .dias .reja { position: absolute; left: 0; right: 0; border-top: 1px solid var(--linea); }
+  .dias .reja span { position: absolute; left: -34px; top: -8px; width: 28px; text-align: right; font-size: 11px; color: var(--tenue); font-variant-numeric: tabular-nums; }
+  .cols { position: absolute; inset: 0; display: flex; align-items: flex-end; gap: 2px; }
+  .col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 2px; cursor: default; min-width: 0; }
+  .col i { display: block; width: 100%; max-width: 26px; }
+  .col i:first-child { border-radius: 4px 4px 0 0; }
+  .col:hover i { filter: brightness(1.12); }
+  .ejex { display: flex; gap: 2px; margin: 6px 0 0 34px; overflow: hidden; }
+  .ejex span { flex: 1 1 0; width: 0; font-size: 11px; color: var(--tenue); display: flex; justify-content: center; white-space: nowrap; min-width: 0; }
+
+  /* rankings */
+  .fila { display: grid; grid-template-columns: minmax(120px, 42%) 1fr 44px; gap: 10px; align-items: center; padding: 5px 0; font-size: 13.5px; }
+  .fila .e { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fila .b { height: 14px; background: var(--s0); border-radius: 4px; overflow: hidden; }
+  .fila .b i { display: block; height: 100%; background: var(--barra); border-radius: 0 4px 4px 0; }
+  .fila .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+  /* mapa de horas */
+  .mapa { display: grid; grid-template-columns: 34px repeat(24, 1fr); gap: 2px; font-size: 11px; color: var(--tenue); }
+  .mapa > * { min-width: 0; }
+  .mapa .c { aspect-ratio: 1; border-radius: 3px; min-height: 10px; max-height: 30px; width: 100%; }
+  .mapa .h { text-align: center; }
+  .mapa .dn { align-self: center; }
+  .escala { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--tenue); margin-top: 10px; }
+  .escala i { width: 18px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); padding: 6px 8px; border-bottom: 1px solid var(--linea); white-space: nowrap; }
+  td { padding: 9px 8px; border-bottom: 1px solid var(--linea); vertical-align: middle; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: color-mix(in srgb, var(--marca) 7%, transparent); }
+  tbody tr.sel { background: color-mix(in srgb, var(--marca) 13%, transparent); }
+  .rol { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; }
+  .desliza { overflow-x: auto; }
+  .act { display: grid; grid-template-columns: 92px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--linea); font-size: 13.5px; }
+  .act:last-child { border-bottom: 0; }
+  .act time { color: var(--tenue); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+  .vacio { color: var(--tenue); padding: 18px 0; text-align: center; font-size: 13.5px; }
+
+  .velo { position: fixed; inset: 0; z-index: 20; background: rgba(10,12,24,.55); display: grid; place-items: center; padding: 18px; }
+  .velo[hidden] { display: none; }
+  .dlg { width: 100%; max-width: 420px; }
+  .dlg label { display: block; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); margin: 14px 0 6px; }
+  .dlg input { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--linea); background: var(--fondo); }
+  .fila-b { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  #tip { position: fixed; z-index: 9; pointer-events: none; background: var(--tinta); color: var(--papel); padding: 7px 10px; border-radius: 10px; font-size: 12.5px; line-height: 1.35; max-width: 240px; opacity: 0; transition: opacity .1s; white-space: pre-line; }
+
+  /* entrada */
+  .puerta { max-width: 470px; margin: 8vh auto 0; }
+  .puerta label { display: block; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); margin: 14px 0 6px; }
+  .puerta .opcion { display: flex; align-items: center; gap: 10px; text-transform: none; letter-spacing: 0; font-size: 14.5px; color: var(--tinta); cursor: pointer; }
+  .puerta .opcion input { width: 20px; height: 20px; padding: 0; accent-color: var(--marca); }
+  .puerta input { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--linea); background: var(--fondo); }
+  .puerta .boton { width: 100%; padding: 12px; margin-top: 16px; font-size: 15px; }
+  .error { color: #B3261E; font-weight: 700; font-size: 13.5px; margin-top: 12px; min-height: 20px; }
+  @media (prefers-color-scheme: dark) { .error { color: #FF9A92; } }
+
+  @media (max-width: 820px) { .fichas { grid-template-columns: 1fr 1fr; } .dos { grid-template-columns: 1fr; } .ficha .n { font-size: 28px; } }
+  @media (prefers-reduced-motion: no-preference) { .col i, .fila .b i { transition: height .25s, width .25s; } }
+</style>
+</head>
+<body>
+<div class="marco">
+
+  <!-- ENTRADA -->
+  <div id="puerta" class="puerta tarjeta" hidden>
+    <div class="mini">Mutualismo Cognitivo</div>
+    <h1>Panel de uso de Ola</h1>
+    <p class="nota">Cuánto usan las apps Nicolás y sus estudiantes, y qué hacen en ellas.</p>
+    <form id="form" novalidate>
+      <div id="zonaUrl">
+      <label for="url">Dirección del Apps Script (termina en /exec)</label>
+      <input id="url" type="text" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+      </div>
+      <p class="nota" id="notaFija" hidden>Este panel tiene clave. Escríbela para entrar.</p>
+      <div id="zonaClave" hidden>
+        <label for="clave">Clave del panel</label>
+        <input id="clave" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+      <button class="boton lleno" type="submit">Entrar</button>
+    </form>
+    <button class="boton" id="demo" type="button">Ver con datos de ejemplo</button>
+    <div class="error" id="error" role="alert"></div>
+  </div>
+
+  <!-- PANEL -->
+  <div id="panel" hidden>
+    <div class="cab">
+      <div class="sitio">
+        <div class="mini">Mutualismo Cognitivo · Panel de uso</div>
+        <h1>¿Cuánto se usan las apps y para qué?</h1>
+        <p class="nota" id="estado"></p>
+      </div>
+      <button class="boton" id="recargar" type="button">Actualizar</button>
+      <button class="boton" id="botonClave" type="button" hidden>Clave</button>
+      <button class="boton" id="salir" type="button">Salir</button>
+    </div>
+
+    <div class="filtros" role="group" aria-label="Filtros">
+      <div class="seg" id="rango" role="group" aria-label="Periodo">
+        <button data-v="7">7 días</button><button data-v="30">30 días</button><button data-v="90">90 días</button>
+      </div>
+      <div class="seg" id="quien" role="group" aria-label="Quién">
+        <button data-v="todos">Todos</button><button data-v="profe">Nicolás</button><button data-v="estudiante">Estudiantes</button>
+      </div>
+      <span class="chip" id="chip"><span id="chipNombre"></span><button type="button" id="chipX" aria-label="Quitar el filtro de persona">×</button></span>
+    </div>
+
+    <div class="pestanas" id="pestanas" role="tablist" aria-label="Secciones del panel">
+      <button role="tab" id="t-resumen" data-v="resumen" aria-controls="p-resumen">Resumen</button>
+      <button role="tab" id="t-hacen" data-v="hacen" aria-controls="p-hacen">Qué hacen</button>
+      <button role="tab" id="t-historias" data-v="historias" aria-controls="p-historias">Historias</button>
+      <button role="tab" id="t-problemas" data-v="problemas" aria-controls="p-problemas">Problemas</button>
+      <button role="tab" id="t-personas" data-v="personas" aria-controls="p-personas">Personas</button>
+      <button role="tab" id="t-actividad" data-v="actividad" aria-controls="p-actividad">Actividad</button>
+    </div>
+
+    <section id="p-resumen" role="tabpanel" aria-labelledby="t-resumen">
+    <div class="fichas" id="fichas"></div>
+
+    <div class="tarjeta uno">
+      <div class="tit">
+        <h2>Minutos de uso por día</h2>
+        <p class="nota">Tiempo con la app abierta y a la vista.</p>
+        <div class="ley"><span><i style="background:var(--profe)"></i>Nicolás</span><span><i style="background:var(--est)"></i>Estudiantes</span></div>
+      </div>
+      <div class="dias" id="dias"></div>
+      <div class="ejex" id="ejex"></div>
+    </div>
+
+    <div class="tarjeta uno">
+      <div class="tit"><h2>A qué hora usan la app</h2><p class="nota">Cada cuadro es una hora de un día de la semana; más oscuro, más actividad.</p></div>
+      <div class="mapa" id="mapa"></div>
+      <div class="escala"><span>Menos</span><i style="background:var(--s0)"></i><i style="background:var(--s1)"></i><i style="background:var(--s2)"></i><i style="background:var(--s3)"></i><i style="background:var(--s4)"></i><i style="background:var(--s5)"></i><span>Más</span></div>
+    </div>
+    </section>
+
+    <section id="p-hacen" role="tabpanel" aria-labelledby="t-hacen" hidden>
+    <div class="dos">
+      <div class="tarjeta">
+        <div class="tit"><h2>Qué hacen</h2><p class="nota">Acciones realizadas, de más a menos.</p></div>
+        <div id="acciones"></div>
+      </div>
+      <div class="tarjeta">
+        <div class="tit"><h2>Qué secciones abren</h2><p class="nota">Veces que se abrió cada pestaña.</p></div>
+        <div id="secciones"></div>
+        <div class="tit" style="margin-top:18px"><h2>Skins elegidas</h2><p class="nota">Veces que se puso cada una.</p></div>
+        <div id="skins"></div>
+      </div>
+    </div>
+
+    </section>
+
+    <section id="p-historias" role="tabpanel" aria-labelledby="t-historias" hidden>
+      <p class="nota" style="margin:0 0 12px">El modo historia es de Ola Estudiante. Los datos de juego se guardan desde la versión 37; lo anterior puede faltar.</p>
+      <div class="fichas" id="fichasH"></div>
+      <div class="dos">
+        <div class="tarjeta">
+          <div class="tit"><h2>Historias que empiezan</h2><p class="nota">Veces que se empezó cada historia.</p></div>
+          <div id="histEmpiezan"></div>
+          <div class="tit" style="margin-top:18px"><h2>Nivel con el que terminan</h2><p class="nota">El nivel de inglés que dio cada historia terminada.</p></div>
+          <div id="histNivel"></div>
+        </div>
+        <div class="tarjeta">
+          <div class="tit"><h2>Quién juega más</h2><p class="nota">Minutos de juego en el periodo.</p></div>
+          <div id="histQuien"></div>
+          <div class="tit" style="margin-top:18px"><h2>Minijuegos</h2><p class="nota">Veces que se abrió cada uno.</p></div>
+          <div id="histMini"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="p-problemas" role="tabpanel" aria-labelledby="t-problemas" hidden>
+      <div class="fichas" id="fichasP"></div>
+      <div class="dos">
+        <div class="tarjeta">
+          <div class="tit"><h2>Qué problemas reportan</h2><p class="nota">Cada opción marcada en «Tiene problemas» o en «Reportar un problema».</p></div>
+          <div id="probTipos"></div>
+        </div>
+        <div class="tarjeta">
+          <div class="tit"><h2>Comentarios y reportes</h2><p class="nota">Lo más nuevo primero. Para marcarlos como revisados, usa la pestaña «Problemas» de la hoja.</p></div>
+          <div id="probLista"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="p-personas" role="tabpanel" aria-labelledby="t-personas" hidden>
+      <div class="tarjeta">
+        <div class="tit"><h2>Por persona</h2><p class="nota">Toca una fila para ver todo el panel solo con esa persona.</p></div>
+        <div class="desliza"><table>
+          <thead><tr><th>Persona</th><th>Última vez</th><th class="num">Días</th><th class="num">Visitas</th><th class="num">Minutos</th><th class="num">Acciones</th><th>Lo que más hace</th></tr></thead>
+          <tbody id="personas"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <section id="p-actividad" role="tabpanel" aria-labelledby="t-actividad" hidden>
+      <div class="tarjeta">
+        <div class="tit"><h2>Actividad reciente</h2><p class="nota">Lo último que pasó, de lo más nuevo a lo más viejo.</p></div>
+        <div id="reciente"></div>
+      </div>
+    </section>
+  </div>
+</div>
+<div id="tip" role="status"></div>
+<div id="dlgClave" class="velo" hidden>
+  <div class="tarjeta dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTit">
+    <h2 id="dlgTit">Clave del panel</h2>
+    <p class="nota" id="dlgNota"></p>
+    <div id="dlgActual"><label for="claveActual">Clave actual</label><input id="claveActual" type="password" autocomplete="off"></div>
+    <label for="claveNueva" id="lblNueva">Clave nueva (mínimo 4 caracteres)</label><input id="claveNueva" type="password" autocomplete="new-password">
+    <div class="error" id="dlgError" role="alert"></div>
+    <div class="fila-b">
+      <button class="boton lleno" id="dlgGuardar" type="button">Guardar</button>
+      <button class="boton" id="dlgQuitar" type="button">Quitar clave</button>
+      <button class="boton" id="dlgCerrar" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ---------- Nombres legibles de lo que anota la app ---------- */
+const ACCION = {
+  reservar: ['Reservó una clase', 'Reservar clase'], cancelarReserva: ['Canceló una reserva', 'Cancelar reserva'],
+  crearTarea: ['Creó una tarea', 'Crear tarea'], cancelarTarea: ['Canceló una tarea', 'Cancelar tarea'], progreso: ['Avanzó en una tarea', 'Avanzar en tareas'],
+  ponerHoras: ['Abrió o cerró horas', 'Abrir o cerrar horas'], guardarSemana: ['Cambió la semana genérica', 'Semana genérica'], restaurarDia: ['Restauró un día', 'Restaurar día'],
+  crearHorarios: ['Creó un horario a la medida', 'Horario a la medida'], actualizarHorario: ['Editó un horario', 'Editar horario'], estadoDia: ['Abrió o cerró un día entero', 'Abrir o cerrar día'],
+  eliminarHorario: ['Eliminó un horario', 'Eliminar horario'], responderReserva: ['Respondió una reserva', 'Responder reservas'],
+  cambiarIcono: ['Cambió el ícono', 'Cambiar ícono'], ponerFoto: ['Cambió su foto', 'Cambiar foto'], ponerPin: ['Puso contraseña', 'Poner contraseña'], quitarPin: ['Quitó la contraseña', 'Quitar contraseña'],
+  actualizarEstudiante: ['Editó a un estudiante', 'Editar estudiante'], minijuego: ['Abrió el minijuego', 'Minijuego'], tutorial: ['Empezó el tutorial', 'Tutorial guiado'], skin: ['Cambió de skin', 'Cambiar de skin'], reportarProblema: ['Contó cómo va el juego', 'Contar cómo va el juego'],
+};
+const SECCION = { hoy: 'Hoy', cal: 'Calendario', clases: 'Mis clases', tareas: 'Tareas', agenda: 'Agenda', avance: 'Avance', juegos: 'Minijuegos' };
+const SKIN = { ola: 'Ola', neon: 'Neón', tubos: 'Tubos de neón', papel: 'Papel cortado', metal: 'Acero', madera: 'Madera', mar: 'Mar de noche', tresd: '3D', tripera: 'Tripera', pizarra: 'Pizarra' };
+const NO_ACCION = new Set(['visita', 'abrir', 'minutos', 'pestana', 'sinPin', 'juego-min', 'nivel', 'minijuego']);
+const HISTORIA = { sil: 'El invierno de SIL', faro: 'El faro apagado', rio: 'El río que no existe', biblioteca: 'La biblioteca de las mareas', medianoche: 'Operación Medianoche' };
+const MINIJUEGO = { olete: 'Olete', 'prueba-nivel': 'Prueba tu nivel' };
+const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const p2 = (n) => String(n).padStart(2, '0');
+const fecha = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+const guardar = { get: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} } };
+const num = (n) => n.toLocaleString('es-CO');
+const mins = (m) => (m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`);
+
+/** Dirección del Apps Script ya conectado a la hoja. Con esto el panel solo pide la clave (o nada, si está apagada). */
+const URL_FIJA = 'https://script.google.com/macros/s/AKfycbxUCpdI8w4uctD8PLxLzqcstcs8JfihxKcHUowebAib3aVmsu8f-3FfW2XIbyzDEUNi/exec';
+
+let DATOS = null;                       // { ahora, personas, uso: [[fecha, quien, tipo, detalle]] }
+const F = { dias: 30, quien: 'todos', persona: null, pestana: 'resumen' };
+
+/* ---------- Datos de ejemplo (para ver el panel sin conectar nada) ---------- */
+function ejemplo() {
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const personas = [{ id: 'profe', nombre: 'Nicolás Solarte', rol: 'profe' }, ...['Laura Gómez', 'Mateo Ríos', 'Sofía Peña', 'Andrés Cano', 'Valentina Ruiz', 'Camilo Vargas'].map((n, i) => ({ id: 'E' + (i + 1), nombre: n, rol: 'estudiante' }))];
+  const gusto = { profe: 0.9, E1: 0.75, E2: 0.5, E3: 0.6, E4: 0.25, E5: 0.4, E6: 0.08 };
+  const uso = [], hoy = new Date();
+  const elegir = (xs) => xs[Math.floor(r() * xs.length)];
+  for (let d = 89; d >= 0; d--) {
+    const dia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - d), fin = dia.getDay() % 6 === 0;
+    personas.forEach((p) => {
+      if (r() > gusto[p.id] * (fin ? 0.45 : 1) * (0.6 + 0.4 * (90 - d) / 90)) return;
+      const veces = 1 + Math.floor(r() * (p.rol === 'profe' ? 3 : 2));
+      for (let v = 0; v < veces; v++) {
+        const h = p.rol === 'profe' ? elegir([7, 8, 8, 12, 13, 18, 19, 20, 21]) : elegir([6, 7, 12, 17, 18, 19, 19, 20, 20, 21, 22]);
+        let m = Math.floor(r() * 50);
+        const t = () => `${fecha(dia)}T${p2(h)}:${p2(Math.min(59, m++))}:${p2(Math.floor(r() * 60))}`;
+        uso.push([t(), p.id, 'visita', ''], [t(), p.id, 'abrir', elegir(['android', 'web', 'web', 'ios'])]);
+        const pest = p.rol === 'profe' ? ['hoy', 'agenda', 'agenda', 'tareas', 'avance', 'juegos'] : ['hoy', 'cal', 'cal', 'clases', 'tareas', 'tareas'];
+        for (let k = 0; k < 1 + Math.floor(r() * 4); k++) uso.push([t(), p.id, 'pestana', elegir(pest)]);
+        const acc = p.rol === 'profe' ? ['ponerHoras', 'ponerHoras', 'responderReserva', 'responderReserva', 'crearTarea', 'guardarSemana', 'actualizarHorario', 'minijuego'] : ['reservar', 'reservar', 'progreso', 'progreso', 'progreso', 'cancelarReserva', 'crearTarea'];
+        for (let k = 0; k < Math.floor(r() * 3.2); k++) uso.push([t(), p.id, elegir(acc), '']);
+        if (r() < 0.08) uso.push([t(), p.id, 'skin', elegir(p.rol === 'profe' ? Object.keys(SKIN) : Object.keys(SKIN).filter((x) => x !== 'tripera'))]);
+        if (r() < 0.03) uso.push([t(), p.id, 'tutorial', p.rol]);
+        uso.push([t(), p.id, 'minutos', String(2 + Math.floor(r() * (p.rol === 'profe' ? 16 : 11)))]);
+        if (p.rol === 'estudiante' && r() < 0.35) {
+          const hi = elegir(Object.keys(HISTORIA)); uso.push([t(), p.id, 'nivel', (r() < 0.6 ? 'empezar:' : 'seguir:') + hi]);
+          for (let k = 0; k < 2 + Math.floor(r() * 9); k++) uso.push([t(), p.id, 'juego-min', '1']);
+          if (r() < 0.4) uso.push([t(), p.id, 'nivel', 'final:' + elegir(['A2', 'B1', 'B1', 'B2'])]);
+        }
+        if (r() < 0.05) uso.push([t(), p.id, 'minijuego', elegir(Object.keys(MINIJUEGO))]);
+      }
+    });
+  }
+  uso.sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  const problemas = [];
+  const opciones = ['Va lento o se traba: Se traba al girar la imagen', 'Se ve mal: Muy oscuro', 'Sonido y voces: La voz suena muy robótica', 'Va lento o se traba: El celular se calienta'];
+  for (let i = 0; i < 14; i++) {
+    const p = personas[1 + Math.floor(r() * 6)], d = new Date(hoy.getTime() - Math.floor(r() * 25) * 864e5), ok = r() < 0.65;
+    problemas.push({ fecha: `${fecha(d)} ${p2(17 + Math.floor(r() * 5))}:${p2(Math.floor(r() * 60))}:00`, rol: 'estudiante', id: p.id, nombre: p.nombre, origen: ok ? 'pregunta 10 min' : 'perfil', estado: ok ? 'bien' : 'problemas', problemas: ok ? '' : elegir(opciones), comentario: ok || r() < 0.5 ? '' : 'En la historia del faro se pone lenta cuando giro rápido', minutos: 10 + Math.floor(r() * 30), equipo: elegir(['android · Moto G24 · detalle Medio', 'web · iPhone · detalle Alto', 'android · Galaxy A15 · detalle Bajo']), revisado: r() < 0.3 });
+  }
+  problemas.sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
+  return { ahora: new Date().toISOString().slice(0, 19), personas, uso, problemas, ejemplo: true };
+}
+
+/* ---------- Conexión ---------- */
+/** Error con un mensaje que se puede mostrar tal cual. */
+const fallo = (m) => Object.assign(new Error(m), { claro: true });
+async function pedir(url, clave) {
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)) throw fallo('La dirección debe ser la del Apps Script: empieza por https://script.google.com/ y termina en /exec. No es la dirección de la hoja de cálculo.');
+  if (clave === '') throw fallo('Escribe la clave del panel.');
+  let texto;
+  try {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'panel', clave: clave || '' }) });
+    texto = await res.text();
+  } catch {
+    if (!/github\.io$/.test(location.hostname)) throw fallo('Esta copia del panel no puede conectarse al servidor (aquí solo se ven los datos de ejemplo). Abre el panel real en consumeciencia.github.io/ola-profe/panel.html');
+    throw fallo('No se pudo conectar. Revisa la conexión y que la dirección /exec esté bien copiada.');
+  }
+  let j;
+  try { j = JSON.parse(texto); }
+  catch { throw fallo('Esa dirección no respondió como el Apps Script de Ola. Lo más común: la implementación no está publicada con acceso para "Cualquier persona", o la dirección no es la que termina en /exec.'); }
+  if (!j.ok) {
+    if (/Sesi[oó]n requerida|no permitida/i.test(j.error || '')) throw fallo('El Apps Script todavía tiene el código anterior. Pega el Code.gs nuevo, ejecuta setup y publica una nueva versión de la implementación.');
+    throw fallo(j.error || 'No se pudo leer');
+  }
+  return j;
+}
+async function entrar(url, clave, callado) {
+  $('error').textContent = callado ? '' : 'Conectando…';
+  try {
+    DATOS = await pedir(url, clave);
+    guardar.set('ola-panel', JSON.stringify({ url, clave }));
+    $('error').textContent = '';
+    mostrar();
+  } catch (e) {
+    $('puerta').hidden = false; $('panel').hidden = true;
+    if (/tiene clave|Clave del panel incorrecta|Demasiados intentos/.test(e.message)) pideClave(true);
+    $('error').textContent = e.claro ? (/tiene clave/.test(e.message) && clave == null ? '' : e.message) : 'No se pudo abrir el panel. Revisa la dirección /exec.';
+  }
+}
+function mostrar() { $('puerta').hidden = true; $('panel').hidden = false; pintar(); }
+
+/* ---------- Cálculo ---------- */
+function filtrado() {
+  const desde = fecha(new Date(Date.now() - (F.dias - 1) * 864e5));
+  const rol = Object.fromEntries(DATOS.personas.map((p) => [p.id, p.rol]));
+  return DATOS.uso.filter((u) => u[0].slice(0, 10) >= desde && (F.persona ? u[1] === F.persona : F.quien === 'todos' || rol[u[1]] === F.quien));
+}
+const contar = (xs, f) => { const m = new Map(); xs.forEach((x) => { const k = f(x); if (k != null) m.set(k, (m.get(k) || 0) + 1); }); return [...m].sort((a, b) => b[1] - a[1]); };
+const sumaMin = (xs) => xs.reduce((n, u) => n + (u[2] === 'minutos' ? Number(u[3]) || 0 : 0), 0);
+const cuando = (iso) => {
+  const d = new Date(iso), h = new Date(), dif = Math.round((new Date(h.getFullYear(), h.getMonth(), h.getDate()) - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 864e5);
+  const hora = `${p2(d.getHours())}:${p2(d.getMinutes())}`;
+  return dif === 0 ? `hoy ${hora}` : dif === 1 ? `ayer ${hora}` : dif < 7 ? `hace ${dif} días` : `${d.getDate()}/${d.getMonth() + 1}`;
+};
+function frase(u) {
+  if (u[2] === 'visita') return 'Entró a la app';
+  if (u[2] === 'pestana') return `Abrió ${SECCION[u[3]] || u[3]}`;
+  if (u[2] === 'skin') return `Puso la skin ${SKIN[u[3]] || u[3]}`;
+  if (u[2] === 'minijuego') return `Abrió ${MINIJUEGO[u[3]] || 'un minijuego'}`;
+  if (u[2] === 'nivel') {
+    const [que, cual] = String(u[3]).split(':');
+    if (que === 'empezar') return `Empezó «${HISTORIA[cual] || cual}»`;
+    if (que === 'seguir') return `Siguió «${HISTORIA[cual] || cual}»`;
+    if (que === 'final') return `Terminó una historia con nivel ${cual}`;
+    if (que === 'charla') return 'Habló con Hayao';
+    return 'Abrió el modo historia';
+  }
+  return (ACCION[u[2]] || [u[2]])[0];
+}
+
+/* ---------- Dibujo ---------- */
+function ranking(el, pares, nombre, vacio) {
+  const max = Math.max(1, ...pares.map((p) => p[1]));
+  el.innerHTML = pares.length ? pares.slice(0, 9).map(([k, n]) => `<div class="fila" data-tip="${esc(nombre(k))}\n${num(n)} ${n === 1 ? 'vez' : 'veces'}"><span class="e">${esc(nombre(k))}</span><span class="b"><i style="width:${Math.max(2, n / max * 100)}%"></i></span><span class="v">${num(n)}</span></div>`).join('') : `<div class="vacio">${vacio}</div>`;
+}
+
+function pintar() {
+  const uso = filtrado(), per = Object.fromEntries(DATOS.personas.map((p) => [p.id, p]));
+  document.querySelectorAll('#pestanas button').forEach((b) => { const on = b.dataset.v === F.pestana; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; $('p-' + b.dataset.v).hidden = !on; });
+  document.querySelectorAll('#rango button').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === F.dias)));
+  document.querySelectorAll('#quien button').forEach((b) => b.setAttribute('aria-pressed', String(!F.persona && b.dataset.v === F.quien)));
+  $('chip').classList.toggle('on', !!F.persona); $('chipNombre').textContent = F.persona ? (per[F.persona]?.nombre || F.persona) : '';
+  $('botonClave').hidden = !!DATOS.ejemplo;
+  $('botonClave').textContent = DATOS.conClave ? 'Clave' : 'Agregar clave';
+  $('salir').hidden = !DATOS.ejemplo && !DATOS.conClave && !!URL_FIJA; // sin clave no hay de qué salir
+  $('salir').textContent = DATOS.ejemplo ? 'Conectar mi hoja' : 'Salir';
+  $('salir').classList.toggle('lleno', !!DATOS.ejemplo);
+  $('estado').textContent = DATOS.ejemplo ? 'Estás viendo datos de ejemplo, no los reales. Para ver los de Nicolás y sus estudiantes, toca "Conectar mi hoja".' : `Actualizado ${cuando(DATOS.ahora)} · ${num(DATOS.uso.length)} registros en los últimos 120 días.`;
+
+  // fichas
+  const activos = new Set(uso.map((u) => u[1])), deQuien = DATOS.personas.filter((p) => (F.persona ? p.id === F.persona : F.quien === 'todos' || p.rol === F.quien));
+  const visitas = uso.filter((u) => u[2] === 'visita').length, m = sumaMin(uso), acc = uso.filter((u) => !NO_ACCION.has(u[2])).length;
+  const diasAct = new Set(uso.map((u) => u[0].slice(0, 10))).size;
+  $('fichas').innerHTML = [
+    ['Personas activas', `${activos.size} de ${deQuien.length}`, `usaron la app en ${F.dias} días`],
+    ['Visitas', num(visitas), `en ${diasAct} ${diasAct === 1 ? 'día' : 'días'} con actividad`],
+    ['Tiempo de uso', m >= 60 ? `${(m / 60).toFixed(1).replace('.', ',')} h` : `${m} min`, visitas ? `≈ ${Math.round(m / visitas)} min por visita` : 'sin visitas'],
+    ['Acciones', num(acc), 'reservas, tareas, horarios…'],
+  ].map(([t, n, d]) => `<div class="tarjeta ficha"><div class="t">${t}</div><div class="n">${n}</div><div class="d">${d}</div></div>`).join('');
+
+  // minutos por día, por rol
+  const dias = [];
+  for (let i = F.dias - 1; i >= 0; i--) { const d = new Date(Date.now() - i * 864e5); dias.push({ f: fecha(d), d, profe: 0, est: 0 }); }
+  const idx = Object.fromEntries(dias.map((x, i) => [x.f, i]));
+  uso.forEach((u) => { if (u[2] !== 'minutos') return; const i = idx[u[0].slice(0, 10)]; if (i == null) return; dias[i][per[u[1]]?.rol === 'profe' ? 'profe' : 'est'] += Number(u[3]) || 0; });
+  const tope = Math.max(10, ...dias.map((x) => x.profe + x.est));
+  const paso = [5, 10, 20, 30, 60, 120, 180, 240, 480].find((p) => tope / p <= 4) || 600, techo = Math.ceil(tope / paso) * paso;
+  let rejas = ''; for (let v = 0; v <= techo; v += paso) rejas += `<div class="reja" style="bottom:${v / techo * 100}%"><span>${v}</span></div>`;
+  $('dias').innerHTML = rejas + '<div class="cols">' + dias.map((x) => {
+    const etiqueta = `${DIAS[(x.d.getDay() + 6) % 7]} ${x.d.getDate()}/${x.d.getMonth() + 1}`;
+    return `<div class="col" data-tip="${etiqueta}\nNicolás: ${mins(x.profe)}\nEstudiantes: ${mins(x.est)}">` +
+      (x.est ? `<i style="height:${x.est / techo * 100}%;background:var(--est)"></i>` : '') +
+      (x.profe ? `<i style="height:${x.profe / techo * 100}%;background:var(--profe)"></i>` : '') + '</div>';
+  }).join('') + '</div>';
+  const cada = F.dias <= 7 ? 1 : F.dias <= 30 ? 5 : 14;
+  $('ejex').innerHTML = dias.map((x, i) => `<span>${(dias.length - 1 - i) % cada === (cada > 1 ? 2 : 0) ? `${x.d.getDate()}/${x.d.getMonth() + 1}` : ''}</span>`).join('');
+
+  // rankings
+  ranking($('acciones'), contar(uso, (u) => (NO_ACCION.has(u[2]) ? null : u[2])), (k) => (ACCION[k] || [k, k])[1], 'Todavía no hay acciones en este periodo.');
+  ranking($('secciones'), contar(uso, (u) => (u[2] === 'pestana' ? u[3] : null)), (k) => SECCION[k] || k, 'Sin datos todavía.');
+  ranking($('skins'), contar(uso, (u) => (u[2] === 'skin' ? u[3] : null)), (k) => SKIN[k] || k, 'Nadie ha cambiado de skin en este periodo.');
+
+  // mapa de horas (día de la semana × hora)
+  const celda = Array.from({ length: 7 }, () => Array(24).fill(0));
+  uso.forEach((u) => { if (u[2] === 'minutos' || u[2] === 'juego-min') return; const d = new Date(u[0]); if (!isNaN(d)) celda[(d.getDay() + 6) % 7][d.getHours()]++; });
+  const maxC = Math.max(1, ...celda.flat());
+  let mapa = '<span></span>' + Array.from({ length: 24 }, (_, h) => `<span class="h">${h % 3 === 0 ? h : ''}</span>`).join('');
+  celda.forEach((filaC, i) => { mapa += `<span class="dn">${DIAS[i]}</span>` + filaC.map((n, h) => `<span class="c" style="background:var(--s${n ? Math.min(5, 1 + Math.floor(n / maxC * 4.999)) : 0})" data-tip="${DIAS[i]} · ${p2(h)}:00 a ${p2(h + 1)}:00\n${num(n)} ${n === 1 ? 'registro' : 'registros'}"></span>`).join(''); });
+  $('mapa').innerHTML = mapa;
+
+  // por persona (respeta el periodo y el segmento, no la persona elegida)
+  const base = (() => { const g = F.persona; F.persona = null; const x = filtrado(); F.persona = g; return x; })();
+  const filas = DATOS.personas.filter((p) => F.quien === 'todos' || p.rol === F.quien).map((p) => {
+    const suyo = base.filter((u) => u[1] === p.id), top = contar(suyo, (u) => (NO_ACCION.has(u[2]) ? null : u[2]))[0];
+    const ult = DATOS.uso.filter((u) => u[1] === p.id).pop();
+    return { p, vis: suyo.filter((u) => u[2] === 'visita').length, dias: new Set(suyo.map((u) => u[0].slice(0, 10))).size, min: sumaMin(suyo), acc: suyo.filter((u) => !NO_ACCION.has(u[2])).length, top: top ? (ACCION[top[0]] || [0, top[0]])[1] : '—', ult: ult ? ult[0] : '' };
+  }).sort((a, b) => b.min - a.min || b.acc - a.acc);
+  $('personas').innerHTML = filas.map((x) => `<tr data-id="${esc(x.p.id)}" class="${F.persona === x.p.id ? 'sel' : ''}" tabindex="0"><td><i class="rol" style="background:var(--${x.p.rol === 'profe' ? 'profe' : 'est'})"></i>${esc(x.p.nombre)}</td><td>${x.ult ? cuando(x.ult) : 'nunca'}</td><td class="num">${x.dias}</td><td class="num">${num(x.vis)}</td><td class="num">${num(x.min)}</td><td class="num">${num(x.acc)}</td><td>${esc(x.top)}</td></tr>`).join('');
+
+  // historias
+  const juego = uso.filter((u) => u[2] === 'juego-min'), minJ = juego.reduce((n, u) => n + (Number(u[3]) || 1), 0);
+  const niv = uso.filter((u) => u[2] === 'nivel').map((u) => String(u[3]).split(':'));
+  const empiezan = niv.filter((x) => x[0] === 'empezar').length, terminan = niv.filter((x) => x[0] === 'final').length;
+  const jugadores = new Set(juego.map((u) => u[1]).concat(uso.filter((u) => u[2] === 'nivel').map((u) => u[1]))).size;
+  $('fichasH').innerHTML = [
+    ['Tiempo de juego', minJ >= 60 ? `${(minJ / 60).toFixed(1).replace('.', ',')} h` : `${minJ} min`, m ? `${Math.round(minJ / m * 100)} % del tiempo en la app` : 'en el modo historia'],
+    ['Juegan', num(jugadores), jugadores === 1 ? 'persona en el periodo' : 'personas en el periodo'],
+    ['Historias empezadas', num(empiezan), `${num(niv.filter((x) => x[0] === 'seguir').length)} veces siguieron una guardada`],
+    ['Historias terminadas', num(terminan), empiezan ? `${Math.round(terminan / empiezan * 100)} % de las empezadas` : 'sin historias empezadas'],
+  ].map(([t, n, d]) => `<div class="tarjeta ficha"><div class="t">${t}</div><div class="n">${n}</div><div class="d">${d}</div></div>`).join('');
+  ranking($('histEmpiezan'), contar(niv, (x) => (x[0] === 'empezar' ? x[1] : null)), (k) => HISTORIA[k] || k, 'Nadie ha empezado una historia en este periodo.');
+  ranking($('histNivel'), contar(niv, (x) => (x[0] === 'final' ? x[1] : null)), (k) => k, 'Todavía no han terminado historias.');
+  const porQuien = new Map(); juego.forEach((u) => porQuien.set(u[1], (porQuien.get(u[1]) || 0) + (Number(u[3]) || 1)));
+  const maxQ = Math.max(1, ...porQuien.values());
+  $('histQuien').innerHTML = porQuien.size ? [...porQuien].sort((a, b) => b[1] - a[1]).slice(0, 9).map(([id, n]) => `<div class="fila" data-tip="${esc(per[id]?.nombre || id)}\n${mins(n)} de juego"><span class="e">${esc(per[id]?.nombre || id)}</span><span class="b"><i style="width:${Math.max(2, n / maxQ * 100)}%"></i></span><span class="v">${num(n)} min</span></div>`).join('') : '<div class="vacio">Nadie ha jugado en este periodo.</div>';
+  ranking($('histMini'), contar(uso, (u) => (u[2] === 'minijuego' ? u[3] : null)), (k) => MINIJUEGO[k] || (k ? k : 'Minijuego (sin nombre)'), 'Sin minijuegos en este periodo.');
+
+  // problemas (respeta periodo, segmento y persona)
+  const desdeP = fecha(new Date(Date.now() - (F.dias - 1) * 864e5));
+  const probs = (DATOS.problemas || []).filter((x) => String(x.fecha).slice(0, 10) >= desdeP && (F.persona ? x.id === F.persona : F.quien === 'todos' || x.rol === F.quien));
+  const bien = probs.filter((x) => x.estado === 'bien').length, mal = probs.length - bien, pend = probs.filter((x) => x.estado !== 'bien' && !x.revisado).length;
+  $('fichasP').innerHTML = [
+    ['Respuestas', num(probs.length), 'a «¿Cómo va el juego?» y reportes'],
+    ['Va bien', num(bien), probs.length ? `${Math.round(bien / probs.length * 100)} % de las respuestas` : 'sin respuestas'],
+    ['Con problemas', num(mal), mal ? `${num(new Set(probs.filter((x) => x.estado !== 'bien').map((x) => x.id)).size)} personas distintas` : 'nadie ha reportado'],
+    ['Sin revisar', num(pend), 'reportes sin marcar en la hoja'],
+  ].map(([t, n, d]) => `<div class="tarjeta ficha"><div class="t">${t}</div><div class="n">${n}</div><div class="d">${d}</div></div>`).join('');
+  ranking($('probTipos'), contar(probs.flatMap((x) => String(x.problemas || '').split(' | ').filter(Boolean)), (k) => k), (k) => k.split(': ').pop(), 'Nadie ha reportado problemas en este periodo.');
+  const lista = probs.filter((x) => x.estado !== 'bien').slice().reverse().slice(0, 40);
+  $('probLista').innerHTML = lista.length ? lista.map((x) => `<div class="act"><time>${cuando(String(x.fecha).replace(' ', 'T'))}</time><span><b>${esc(String(x.nombre || x.id).split(' ')[0])}</b>${x.revisado ? ' · ✓ revisado' : ''} · ${esc(x.problemas || 'Sin opciones marcadas')}${x.comentario ? `<br><i>«${esc(x.comentario)}»</i>` : ''}${x.equipo ? `<br><span class="nota">${esc(x.equipo)}</span>` : ''}</span></div>`).join('') : '<div class="vacio">Sin reportes de problemas en este periodo.</div>';
+
+  // actividad reciente
+  const rec = uso.filter((u) => u[2] !== 'minutos' && u[2] !== 'abrir' && u[2] !== 'juego-min').slice(-80).reverse();
+  $('reciente').innerHTML = rec.length ? rec.map((u) => `<div class="act"><time>${cuando(u[0])}</time><span><b>${esc((per[u[1]]?.nombre || u[1]).split(' ')[0])}</b> · ${esc(frase(u))}</span></div>`).join('') : '<div class="vacio">Nada todavía en este periodo.</div>';
+}
+
+/* ---------- Interacción ---------- */
+$('pestanas').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { F.pestana = b.dataset.v; pintar(); } });
+$('pestanas').addEventListener('keydown', (e) => {
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  const bs = [...document.querySelectorAll('#pestanas button')], i = bs.findIndex((b) => b.dataset.v === F.pestana);
+  const n = bs[(i + (e.key === 'ArrowRight' ? 1 : bs.length - 1)) % bs.length];
+  F.pestana = n.dataset.v; pintar(); n.focus();
+});
+$('rango').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { F.dias = Number(b.dataset.v); pintar(); } });
+$('quien').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { F.quien = b.dataset.v; F.persona = null; pintar(); } });
+$('chipX').addEventListener('click', () => { F.persona = null; pintar(); });
+const elegirPersona = (tr) => { if (!tr) return; F.persona = F.persona === tr.dataset.id ? null : tr.dataset.id; pintar(); };
+$('personas').addEventListener('click', (e) => elegirPersona(e.target.closest('tr')));
+$('personas').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegirPersona(e.target.closest('tr')); } });
+// La clave solo se pide si el panel la tiene (lo dice el Apps Script). clave === null: entrar sin clave
+const pideClave = (si) => { $('zonaClave').hidden = !si; $('notaFija').hidden = !si || !URL_FIJA; };
+$('form').addEventListener('submit', (e) => { e.preventDefault(); entrar($('url').value.trim(), $('zonaClave').hidden ? null : $('clave').value.trim()); });
+$('demo').addEventListener('click', () => { DATOS = ejemplo(); mostrar(); });
+$('salir').addEventListener('click', () => { guardar.set('ola-panel', null); DATOS = null; $('panel').hidden = true; $('puerta').hidden = false; $('error').textContent = ''; if (URL_FIJA) $('url').value = URL_FIJA; });
+/* ---------- Poner, cambiar o quitar la clave del panel ---------- */
+const abrirClave = () => {
+  const con = !!DATOS?.conClave;
+  $('dlgNota').textContent = con ? 'El panel pide clave al entrar. Puedes cambiarla o quitarla.' : 'Ahora el panel entra sin clave. Si le pones una, se pedirá al abrirlo en cualquier teléfono.';
+  $('dlgActual').hidden = !con; $('dlgQuitar').hidden = !con;
+  $('lblNueva').textContent = con ? 'Clave nueva (mínimo 4 caracteres)' : 'Clave (mínimo 4 caracteres)';
+  $('claveActual').value = ''; $('claveNueva').value = ''; $('dlgError').textContent = '';
+  $('dlgClave').hidden = false; (con ? $('claveActual') : $('claveNueva')).focus();
+};
+async function guardarClave(nueva) {
+  const g = JSON.parse(guardar.get('ola-panel') || 'null') || { url: URL_FIJA };
+  const actual = DATOS?.conClave ? ($('claveActual').value.trim() || g.clave || '') : '';
+  if (nueva && nueva.length < 4) { $('dlgError').textContent = 'La clave debe tener al menos 4 caracteres.'; return; }
+  $('dlgError').textContent = 'Guardando…';
+  try {
+    const res = await fetch(g.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'panelClave', actual, nueva }) });
+    const j = JSON.parse(await res.text());
+    if (!j.ok) throw fallo(j.error || 'No se pudo');
+    guardar.set('ola-panel', JSON.stringify({ url: g.url, clave: nueva || null }));
+    DATOS.conClave = !!nueva; $('dlgClave').hidden = true; pintar();
+  } catch (e) { $('dlgError').textContent = e.claro ? e.message : 'No se pudo guardar. Revisa la conexión.'; }
+}
+$('botonClave').addEventListener('click', abrirClave);
+$('dlgGuardar').addEventListener('click', () => guardarClave($('claveNueva').value.trim()));
+$('dlgQuitar').addEventListener('click', () => guardarClave(''));
+$('dlgCerrar').addEventListener('click', () => { $('dlgClave').hidden = true; });
+$('dlgClave').addEventListener('click', (e) => { if (e.target === $('dlgClave')) $('dlgClave').hidden = true; });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('dlgClave').hidden = true; });
+
+$('recargar').addEventListener('click', () => { const g = JSON.parse(guardar.get('ola-panel') || 'null'); if (DATOS?.ejemplo || !g) { DATOS = ejemplo(); pintar(); } else entrar(g.url, g.clave, true); });
+
+const tip = $('tip');
+document.addEventListener('pointermove', (e) => {
+  const t = e.target.closest?.('[data-tip]');
+  if (!t) { tip.style.opacity = 0; return; }
+  tip.textContent = t.dataset.tip; tip.style.opacity = 1;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, e.clientX - w / 2)) + 'px';
+  tip.style.top = (e.clientY - h - 14 < 8 ? e.clientY + 18 : e.clientY - h - 14) + 'px';
+});
+document.addEventListener('pointerleave', () => { tip.style.opacity = 0; });
+
+/* ---------- Arranque ---------- */
+(() => {
+  const g = JSON.parse(guardar.get('ola-panel') || 'null');
+  if (URL_FIJA) { $('url').value = URL_FIJA; $('zonaUrl').hidden = true; }
+  if (g?.url) { $('url').value = g.url; entrar(g.url, g.clave ?? null, true); }
+  else if (/[?#&]demo/.test(location.href) || !URL_FIJA) { DATOS = ejemplo(); mostrar(); }
+  else entrar(URL_FIJA, null, true); // sin clave; si el panel tiene una, aparece el campo para escribirla
+})();
+</script>
+</body>
+</html>
